@@ -122,7 +122,7 @@ resource "kubernetes_persistent_volume_claim" "example" {
   }
 }
 
-#resource "kubernetes_namespace" "hono" {
+# resource "kubernetes_namespace" "hono" {
 #  metadata {
 #    name = "hono"
 #  }

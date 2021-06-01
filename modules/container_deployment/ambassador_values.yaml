@@ -1,0 +1,31 @@
+enableAES: false
+replicaCount: 1
+service:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+    - name: https
+      port: 443
+      targetPort: 8443
+    - name: mqtt-adapter
+      port: 1883
+      targetPort: 1883
+    - name: http-adapter
+      port: 18080
+      targetPort: 18080
+    - name: device-registry
+      port: 28080
+      targetPort: 28080
+    - name: dispatch-router
+      port: 5671
+      targetPort: 15671
+    - name: grafana
+      port: 3000
+      targetPort: 3000
+    - name: jaeger
+      port: 16686
+      targetPort: 16686
+    - name: prometheus
+      port: 9090
+      targetPort: 9090

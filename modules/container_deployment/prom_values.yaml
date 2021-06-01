@@ -1,4 +1,18 @@
 grafana:
+  service:
+    type: "ClusterIP"
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts:
+      - smaddis.westeurope.cloudapp.azure.com
+    path: /grafana/
+  grafana.ini: 
+   server:
+      domain: smaddis.westeurope.cloudapp.azure.com
+      root_url: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      serve_from_sub_path: true
+      http_port: 3000
   dashboardProviders:
     dashboardproviders.yaml:
       apiVersion: 1
@@ -11,8 +25,6 @@ grafana:
         editable: false
         options:
           path: /etc/secrets/dashboards/
-  service:
-    type: "LoadBalancer"
   extraSecretMounts:
     - name: dashboards-secret-mount
       secretName: grafana-hono-dashboards
