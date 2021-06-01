@@ -19,3 +19,11 @@ variable "mongodb_rootPassword" {
   type        = string
   description = "Optional password for  MongoDB"
 }
+
+variable "ambassador_public_ip" {
+  type = string
+}
+
+variable "k8s_cluster_rg_name" {
+  type = string
+}

@@ -1,6 +1,7 @@
 locals {
   project_name    = terraform.workspace == "default" ? var.project_name : "${terraform.workspace}${var.project_name}"
   k8s_agent_count = terraform.workspace == "default" ? var.k8s_agent_count : var.testing_k8s_agent_count
+  k8s_dns_prefix  = terraform.workspace == "default" ? var.k8s_dns_prefix : "${terraform.workspace}-${var.k8s_dns_prefix}"
 }
 
 # module "tfstate_storage_azure" {
@@ -17,6 +18,7 @@ module "k8s_cluster_azure" {
   k8s_agent_count                = local.k8s_agent_count
   k8s_resource_group_name_suffix = var.k8s_resource_group_name_suffix
   project_name                   = local.project_name
+  k8s_dns_prefix                 = local.k8s_dns_prefix 
   use_separate_storage_rg        = var.use_separate_storage_rg
 }
 
@@ -34,7 +36,8 @@ module "container_deployment" {
   source           = "./modules/container_deployment"
   mongodb_username = var.mongodb_username
   mongodb_password = var.mongodb_password
-
+  ambassador_public_ip = module.k8s_cluster_azure.ambassador_public_ip
+  k8s_cluster_rg_name = module.k8s_cluster_azure.k8s_cluster_rg_name
   #depends_on here or no need? 
   cluster_name = tostring(module.k8s_cluster_azure.k8s_cluster_name)
 

@@ -35,3 +35,4 @@ override.tf.json
 
 *kubeconfig
 config.json
+*.jar

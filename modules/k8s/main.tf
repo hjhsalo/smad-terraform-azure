@@ -45,7 +45,7 @@ resource "azurerm_kubernetes_cluster" "k8s_cluster" {
   name                = "${lower(var.project_name)}-${var.k8s_cluster_name_suffix}"
   location            = azurerm_resource_group.k8s_rg.location
   resource_group_name = azurerm_resource_group.k8s_rg.name
-  dns_prefix          = var.k8s_dns_prefix
+  dns_prefix          = var.k8s_dns_prefix 
 
   # Use Managed Identity for K8S cluster identity
   # https://www.chriswoolum.dev/aks-with-managed-identity-and-terraform
@@ -91,6 +91,25 @@ resource "azurerm_kubernetes_cluster" "k8s_cluster" {
   tags = {
     environment = var.environment
   }
+}
+
+resource "azurerm_public_ip" "ambassador-ingress" {
+  name                = "ambassador-ingress-pip"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.k8s_rg.name
+  
+  ## or allocation_method = "Dynamic" is sku is "Basic":
+  ## https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip#sku
+  sku                 = "Standard"
+  allocation_method   = "Static" 
+  
+  domain_name_label   = var.k8s_dns_prefix ##PREFIX WITH TF WORKSPACE NAME
+}
+
+resource "azurerm_role_assignment" "publicip" {
+  scope              = azurerm_resource_group.k8s_rg.id
+  role_definition_name = "Network Contributor"
+  principal_id       = azurerm_kubernetes_cluster.k8s_cluster.identity[0].principal_id
 }
 
 resource "kubernetes_storage_class" "azure-disk-retain" {

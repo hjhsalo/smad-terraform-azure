@@ -34,7 +34,7 @@ metadata:
   name: letsencrypt-prod
 spec:
   acme:
-    email: email@example.com
+    email: mail@example.com
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-prod

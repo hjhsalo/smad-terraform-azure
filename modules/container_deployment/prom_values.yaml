@@ -1,6 +1,6 @@
 grafana:
   service:
-    type: "ClusterIP"
+    type: "LoadBalancer"
   ingress:
     enabled: true
     ingressClassName: nginx
