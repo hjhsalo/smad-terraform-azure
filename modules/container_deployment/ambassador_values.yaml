@@ -29,3 +29,66 @@ service:
     - name: prometheus
       port: 9090
       targetPort: 9090
+  annotations:
+    getambassador.io/config: |
+      ---  
+      apiVersion: getambassador.io/v2
+      kind:  TCPMapping
+      metadata:
+        name: hono-http-adapter
+      spec:
+        port: 18080
+        service: hono-adapter-http-vertx:8080
+      ---
+      apiVersion: getambassador.io/v2
+      kind: TCPMapping
+      metadata:
+        name: hono-mqtt-adapter
+      spec:
+        port: 1883
+        service: hono-adapter-mqtt-vertx:1883
+      ---
+      apiVersion: getambassador.io/v2
+      kind: TCPMapping
+      metadata:
+        name: hono-device-registry
+      spec:
+        port: 28080
+        service: hono-service-device-registry-ext:28080
+      ---
+      apiVersion: getambassador.io/v2
+      kind: TCPMapping
+      metadata:
+        name: hono-dispatch-router
+      spec:
+        port: 15671
+        service: hono-service-device-registry-ext:15671
+      ---
+      apiVersion: getambassador.io/v2
+      kind: TCPMapping
+      metadata:
+        name: prometheus-grafana
+      spec:
+        port: 3000
+        prefix: /grafana/
+        host: ms-k8stest.westeurope.cloudapp.azure.com
+        service: prometheus-grafana:3000
+      ---
+      apiVersion: getambassador.io/v2
+      kind: TCPMapping
+      metadata:
+        name: jaeger-operator-jaeger-query
+      spec:
+        port: 16686
+        prefix: /jaeger/
+        host: ms-k8stest.westeurope.cloudapp.azure.com
+        service: jaeger-operator-jaeger-query:16686
+      ---
+      apiVersion: getambassador.io/v2
+      kind: Mapping
+      metadata:
+        name: acme-challenge-mapping
+      spec:
+        prefix: /.well-known/acme-challenge/
+        rewrite: ""
+        service: acme-challenge-service

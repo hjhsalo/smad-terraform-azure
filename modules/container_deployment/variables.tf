@@ -27,3 +27,7 @@ variable "ambassador_public_ip" {
 variable "k8s_cluster_rg_name" {
   type = string
 }
+
+variable "k8s_dns_prefix" {
+  type = string
+}

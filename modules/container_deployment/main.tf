@@ -3,7 +3,9 @@
 # https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/guides/getting-started
 # https://www.hashicorp.com/blog/kubernetes-cluster-with-aks-and-terraform
 
-
+locals {
+  domain_name = format("%s.westeurope.cloudapp.azure.com", var.k8s_dns_prefix)
+}
 
 # https://github.com/bitnami/azure-marketplace-charts/tree/a2342181bacffa6d27d265db187dcc938af1c3f0/bitnami/mongodb
 resource "helm_release" "mongodb" {
@@ -83,6 +85,13 @@ resource "helm_release" "ambassador" {
     value     = var.k8s_cluster_rg_name 
   }
 
+/*   set {
+    name = "service.annotations"
+    value = {
+      "getambassador.io/config" = "${data.template_file.ambassador_mappings.rendered}"
+    }
+  } */
+
 }
 
 
@@ -145,7 +154,19 @@ resource "helm_release" "kube-prometheus-stack" {
   values = [
     file("${path.module}/prom_values.yaml")
   ]
+
+  set {
+  name = "grafana.ingress.hosts"
+  value = "{${local.domain_name}}"
+  }
+
+  set{ 
+    name = "grafana.grafana\\.ini.server.domain"
+    value = local.domain_name
+  }
 }
+
+
 
 /*
 # Works if kubeconfig is properly configured (az aks get-credentials not needed after terraform apply is done)
@@ -160,3 +181,70 @@ resource "null_resource" "kubectl_apply" {
     command = "kubectl apply -f ${path.module}/ambassador_mappings.yaml && kubectl apply -f ${path.module}/tls.yaml"
   }
 }*/
+
+
+/* data "template_file" "ambassador_mappings" {
+  template = <<EOF
+  apiVersion: getambassador.io/v2
+kind:  TCPMapping
+metadata:
+  name: hono-http-adapter
+spec:
+  port: 18080
+  service: hono-adapter-http-vertx:8080
+---
+apiVersion: getambassador.io/v2
+kind:  TCPMapping
+metadata:
+  name: hono-mqtt-adapter
+spec:
+  port: 1883
+  service: hono-adapter-mqtt-vertx:1883
+---
+apiVersion: getambassador.io/v2
+kind:  TCPMapping
+metadata:
+  name: hono-device-registry
+spec:
+  port: 28080
+  service: hono-service-device-registry-ext:28080
+---
+apiVersion: getambassador.io/v2
+kind:  TCPMapping
+metadata:
+  name: hono-dispatch-router
+spec:
+  port: 15671
+  service: hono-service-device-registry-ext:15671
+---
+apiVersion: getambassador.io/v2
+kind:  TCPMapping
+metadata:
+  name: prometheus-grafana
+spec:
+  port: 3000
+  prefix: /grafana/
+  host: smaddis.westeurope.cloudapp.azure.com
+  service: prometheus-grafana:3000
+---
+apiVersion: getambassador.io/v2
+kind:  TCPMapping
+metadata:
+  name: jaeger-operator-jaeger-query
+spec:
+  port: 16686
+  prefix: /jaeger/
+  host: smaddis.westeurope.cloudapp.azure.com
+  service: jaeger-operator-jaeger-query:16686
+---
+apiVersion: getambassador.io/v2
+kind: Mapping
+metadata:
+  name: acme-challenge-mapping
+spec:
+  prefix: /.well-known/acme-challenge/
+  rewrite: ""
+  service: acme-challenge-service
+EOF
+
+} */
