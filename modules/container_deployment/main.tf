@@ -94,6 +94,22 @@ resource "helm_release" "ambassador" {
 
 }
 
+resource "kubernetes_service" "acme_challenge" {
+  metadata {
+    name = "acme-challenge-service"
+  }
+  spec {
+    selector = {
+    "acme.cert-manager.io/http01-solver" = "true"
+    }
+    port {
+      port = 80
+      target_port = 8089
+    }
+    type = "ClusterIP"
+  }
+}
+
 
 # https://github.com/jaegertracing/helm-charts/tree/72db111cf61e9d85f75b74a8398f2c98da0bc9d3/charts/jaeger-operator
 resource "helm_release" "jaeger-operator" {
