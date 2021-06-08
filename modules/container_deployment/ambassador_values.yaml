@@ -41,7 +41,7 @@ service:
         service: hono-adapter-http-vertx:8080
       ---
       apiVersion: getambassador.io/v2
-      kind: TCPMapping
+      kind:  TCPMapping
       metadata:
         name: hono-mqtt-adapter
       spec:
@@ -49,7 +49,7 @@ service:
         service: hono-adapter-mqtt-vertx:1883
       ---
       apiVersion: getambassador.io/v2
-      kind: TCPMapping
+      kind:  TCPMapping
       metadata:
         name: hono-device-registry
       spec:
@@ -57,7 +57,7 @@ service:
         service: hono-service-device-registry-ext:28080
       ---
       apiVersion: getambassador.io/v2
-      kind: TCPMapping
+      kind:  TCPMapping
       metadata:
         name: hono-dispatch-router
       spec:
@@ -65,27 +65,27 @@ service:
         service: hono-service-device-registry-ext:15671
       ---
       apiVersion: getambassador.io/v2
-      kind: TCPMapping
+      kind:  TCPMapping
       metadata:
         name: prometheus-grafana
       spec:
         port: 3000
         prefix: /grafana/
-        host: ms-k8stest.westeurope.cloudapp.azure.com
+        host: ${domain}
         service: prometheus-grafana:3000
       ---
       apiVersion: getambassador.io/v2
-      kind: TCPMapping
+      kind:  TCPMapping
       metadata:
         name: jaeger-operator-jaeger-query
       spec:
         port: 16686
         prefix: /jaeger/
-        host: ms-k8stest.westeurope.cloudapp.azure.com
+        host: ${domain}
         service: jaeger-operator-jaeger-query:16686
       ---
       apiVersion: getambassador.io/v2
-      kind: Mapping
+      kind:  Mapping
       metadata:
         name: acme-challenge-mapping
       spec:

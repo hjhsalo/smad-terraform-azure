@@ -64,7 +64,7 @@ resource "helm_release" "ambassador" {
   chart      = "ambassador"
   version    = "~> 6.6.0"
   values = [
-    file("${path.module}/ambassador_values.yaml")
+    templatefile("${path.module}/ambassador_values.yaml", { domain = local.domain_name})
   ]
 
   set { 
