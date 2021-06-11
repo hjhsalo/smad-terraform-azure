@@ -5,6 +5,7 @@
 
 locals {
   domain_name = format("%s.westeurope.cloudapp.azure.com", var.k8s_dns_prefix)
+  email = "mikael.saarinen@oulu.fi"
 }
 
 # https://github.com/bitnami/azure-marketplace-charts/tree/a2342181bacffa6d27d265db187dcc938af1c3f0/bitnami/mongodb
@@ -93,7 +94,13 @@ resource "helm_release" "ambassador" {
   } */
 
 }
+resource "kubectl_manifest" "ambassador_mappings" {
+  yaml_body = templatefile("${path.module}/ambassador_mappings.yaml", { domain = local.domain_name})
+}
 
+resource "kubectl_manifest" "tls_mappings" {
+  yaml_body = templatefile("${path.module}/tls_mappings.yaml", { domain = local.domain_name, email = local.email})
+}
 
 # https://github.com/jaegertracing/helm-charts/tree/72db111cf61e9d85f75b74a8398f2c98da0bc9d3/charts/jaeger-operator
 resource "helm_release" "jaeger-operator" {

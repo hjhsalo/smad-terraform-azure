@@ -7,15 +7,16 @@ metadata:
 spec:
   tls:
   - hosts:
-    - smaddis.westeurope.cloudapp.azure.com
+    - ${domain}
     secretName: ambassador-certs
   rules:
-  - host: smaddis.westeurope.cloudapp.azure.com
+  - host: ${domain}
     http:
       paths:
       - path: /grafana/
         pathType: Prefix
         backend:
+apiVersion: cert-manager.io/v1
           service:
             name: prometheus-grafana
             port:
@@ -34,7 +35,7 @@ metadata:
   name: letsencrypt-prod
 spec:
   acme:
-    email: mail@example.com
+    email: ${email}
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-prod
@@ -58,4 +59,4 @@ spec:
     name: letsencrypt-prod
     kind: ClusterIssuer
   dnsNames:
-  - smaddis.westeurope.cloudapp.azure.com
+  - ${domain}

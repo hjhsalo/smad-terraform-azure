@@ -37,7 +37,7 @@ metadata:
 spec:
   port: 3000
   prefix: /grafana/
-  host: smaddis.westeurope.cloudapp.azure.com
+  host: ${domain}
   service: prometheus-grafana:3000
 ---
 apiVersion: getambassador.io/v2
@@ -47,7 +47,7 @@ metadata:
 spec:
   port: 16686
   prefix: /jaeger/
-  host: smaddis.westeurope.cloudapp.azure.com
+  host: ${domain}
   service: jaeger-operator-jaeger-query:16686
 ---
 apiVersion: getambassador.io/v2
