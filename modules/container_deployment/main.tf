@@ -8,6 +8,15 @@ locals {
   email = "mikael.saarinen@oulu.fi"
 }
 
+terraform {
+  required_providers {
+    kubectl = {
+      source = "gavinbunney/kubectl"
+      version = "~> 1.11.1"
+    }
+  }
+}
+
 # https://github.com/bitnami/azure-marketplace-charts/tree/a2342181bacffa6d27d265db187dcc938af1c3f0/bitnami/mongodb
 resource "helm_release" "mongodb" {
   name = "mongodb"
@@ -101,6 +110,22 @@ resource "kubectl_manifest" "ambassador_mappings" {
 resource "kubectl_manifest" "tls_mappings" {
   yaml_body = templatefile("${path.module}/tls_mappings.yaml", { domain = local.domain_name, email = local.email})
 }
+resource "kubernetes_service" "acme_challenge" {
+  metadata {
+    name = "acme-challenge-service"
+  }
+  spec {
+    selector = {
+    "acme.cert-manager.io/http01-solver" = "true"
+    }
+    port {
+      port = 80
+      target_port = 8089
+    }
+    type = "ClusterIP"
+  }
+}
+
 
 # https://github.com/jaegertracing/helm-charts/tree/72db111cf61e9d85f75b74a8398f2c98da0bc9d3/charts/jaeger-operator
 resource "helm_release" "jaeger-operator" {

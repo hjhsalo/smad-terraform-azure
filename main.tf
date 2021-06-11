@@ -38,6 +38,7 @@ module "container_deployment" {
   mongodb_password = var.mongodb_password
   ambassador_public_ip = module.k8s_cluster_azure.ambassador_public_ip
   k8s_cluster_rg_name = module.k8s_cluster_azure.k8s_cluster_rg_name
+  k8s_dns_prefix = local.k8s_dns_prefix 
   #depends_on here or no need? 
   cluster_name = tostring(module.k8s_cluster_azure.k8s_cluster_name)
 
@@ -71,10 +72,10 @@ terraform {
     }
     kubectl = {
       source  = "gavinbunney/kubectl"
-      version = ">= 1.7.0"
+      version = "~> 1.11.1"
     }
   }
-  }
+  
 
   backend "azurerm" {
     # Shared state is stored in Azure

@@ -16,7 +16,6 @@ spec:
       - path: /grafana/
         pathType: Prefix
         backend:
-apiVersion: cert-manager.io/v1
           service:
             name: prometheus-grafana
             port:
