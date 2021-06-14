@@ -31,7 +31,7 @@ module "k8s_cluster_azure" {
 #}
 
 module "container_deployment" {
-  providers        = { kubernetes = kubernetes, helm = helm, kubectl = kubectl }
+  providers        = { kubernetes = kubernetes, helm = helm}
   depends_on       = [module.k8s_cluster_azure]
   source           = "./modules/container_deployment"
   mongodb_username = var.mongodb_username
@@ -40,8 +40,6 @@ module "container_deployment" {
   k8s_cluster_rg_name = module.k8s_cluster_azure.k8s_cluster_rg_name
   k8s_dns_prefix = local.k8s_dns_prefix 
   email = "mikael.saarinen@oulu.fi"
-  host = module.k8s_cluster_azure.host
-  cluster_ca_certificate = base64decode(module.k8s_cluster_azure.cluster_ca_certificate)
   #depends_on here or no need? 
   cluster_name = tostring(module.k8s_cluster_azure.k8s_cluster_name)
 
@@ -72,10 +70,6 @@ terraform {
     helm = {
       source  = "hashicorp/helm"
       version = "~> 2.1.0"
-    }
-    kubectl = {
-      source  = "gavinbunney/kubectl"
-      version = "~> 1.11.1"
     }
   }
   
@@ -121,12 +115,6 @@ provider "helm" {
     cluster_ca_certificate = base64decode(module.k8s_cluster_azure.cluster_ca_certificate)
   }
 }
-
-/* provider "kubectl" {
-  host                   = module.k8s_cluster_azure.host
-  cluster_ca_certificate = base64decode(module.k8s_cluster_azure.cluster_ca_certificate)
-  load_config_file       = false
-} */
 
 resource "azurerm_role_assignment" "k8s-storage-role-ass" {
   count                            = var.use_separate_storage_rg ? 1 : 0

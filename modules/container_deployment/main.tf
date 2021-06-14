@@ -8,20 +8,6 @@ locals {
   email = var.email
 }
 
-terraform {
-  required_providers {
-    kubectl = {
-      source = "gavinbunney/kubectl"
-      version = "~> 1.11.1"
-    }
-  }
-}
-
-provider "kubectl" {
-  host                   = var.host
-  cluster_ca_certificate = var.cluster_ca_certificate
-  load_config_file       = false
-}
 
 # https://github.com/bitnami/azure-marketplace-charts/tree/a2342181bacffa6d27d265db187dcc938af1c3f0/bitnami/mongodb
 resource "helm_release" "mongodb" {
@@ -110,41 +96,6 @@ resource "helm_release" "ambassador" {
 
 }
 
-###########################################
-### CRDs for Ambassador and cert-manager ##
-###########################################
-##Hardcoded manifest count value because of https://github.com/gavinbunney/terraform-provider-kubectl/issues/58
-## And the -temp resource doesn't work inside modules https://github.com/gavinbunney/terraform-provider-kubectl/issues/61
-data "kubectl_path_documents" "ambassador_manifests" {
-  pattern = "${path.module}/ambassador_mappings.yaml"
-  vars = {
-    domain = local.domain_name
-  }
-}
-
-resource "kubectl_manifest" "ambassador_mappings" {
-  wait = true
-  count = 7
-  yaml_body = element(data.kubectl_path_documents.ambassador_manifests.documents, count.index)
-}
-
-data "kubectl_path_documents" "tls_manifests" {
-  pattern = "${path.module}/tls_mappings.yaml"
-  vars = {
-    email = local.email
-    domain = local.domain_name
-  }
-}
-
-resource "kubectl_manifest" "tls_mappings" {
-  wait = true
-  count = 3
-  yaml_body = element(data.kubectl_path_documents.tls_manifests.documents, count.index)
-}
-
-/* resource "kubectl_manifest" "tls_mappings" {
-  yaml_body = templatefile("${path.module}/tls_mappings.yaml", { domain = local.domain_name, email = local.email})
-} */
 resource "kubernetes_service" "acme_challenge" {
   metadata {
     name = "acme-challenge-service"
@@ -235,83 +186,32 @@ resource "helm_release" "kube-prometheus-stack" {
 
 
 
-/*
 # Works if kubeconfig is properly configured (az aks get-credentials not needed after terraform apply is done)
 # Move tls.yaml and ambassador_mappings.yaml to modules/container_deployment directory
 # Terraform should apply them automatically after it's done creating the cluster
 # If it fails, it doesn't affect anything and you can apply them manually 
 resource "null_resource" "kubectl_apply" {
-  triggers = {
+  /* triggers = {
     k8s_yaml_contents = file("${path.module}/ambassador_mappings.yaml")
-  }
+  } */
   provisioner "local-exec" {
-    command = "kubectl apply -f ${path.module}/ambassador_mappings.yaml && kubectl apply -f ${path.module}/tls.yaml"
+    command = "kubectl apply -f -<<EOF\n${data.template_file.ambassador_mappings.rendered}\nEOF"
   }
-}*/
+
+  provisioner "local-exec" {
+    command = "kubectl apply -f -<<EOF\n${data.template_file.tls_mappings.rendered}\nEOF"
+  }
+  
+}
 
 
-/* data "template_file" "ambassador_mappings" {
-  template = <<EOF
-  apiVersion: getambassador.io/v2
-kind:  TCPMapping
-metadata:
-  name: hono-http-adapter
-spec:
-  port: 18080
-  service: hono-adapter-http-vertx:8080
----
-apiVersion: getambassador.io/v2
-kind:  TCPMapping
-metadata:
-  name: hono-mqtt-adapter
-spec:
-  port: 1883
-  service: hono-adapter-mqtt-vertx:1883
----
-apiVersion: getambassador.io/v2
-kind:  TCPMapping
-metadata:
-  name: hono-device-registry
-spec:
-  port: 28080
-  service: hono-service-device-registry-ext:28080
----
-apiVersion: getambassador.io/v2
-kind:  TCPMapping
-metadata:
-  name: hono-dispatch-router
-spec:
-  port: 15671
-  service: hono-service-device-registry-ext:15671
----
-apiVersion: getambassador.io/v2
-kind:  TCPMapping
-metadata:
-  name: prometheus-grafana
-spec:
-  port: 3000
-  prefix: /grafana/
-  host: smaddis.westeurope.cloudapp.azure.com
-  service: prometheus-grafana:3000
----
-apiVersion: getambassador.io/v2
-kind:  TCPMapping
-metadata:
-  name: jaeger-operator-jaeger-query
-spec:
-  port: 16686
-  prefix: /jaeger/
-  host: smaddis.westeurope.cloudapp.azure.com
-  service: jaeger-operator-jaeger-query:16686
----
-apiVersion: getambassador.io/v2
-kind: Mapping
-metadata:
-  name: acme-challenge-mapping
-spec:
-  prefix: /.well-known/acme-challenge/
-  rewrite: ""
-  service: acme-challenge-service
-EOF
+data "template_file" "ambassador_mappings" {
+  template = file("${path.module}/ambassador_mappings.yaml")
+  vars = {
+    domain = local.domain_name
+  }
+} 
 
-} */
+data "template_file" "tls_mappings" {
+  template = templatefile("${path.module}/tls_mappings.yaml", { domain = local.domain_name, email = local.email})
+} 

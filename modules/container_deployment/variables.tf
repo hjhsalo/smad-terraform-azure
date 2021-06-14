@@ -28,14 +28,6 @@ variable "k8s_cluster_rg_name" {
   type = string
 }
 
-variable "host" {
-  type = string
-}
-
-variable "cluster_ca_certificate" {
-  type = string
-}
-
 variable "k8s_dns_prefix" {
   type = string
 }
