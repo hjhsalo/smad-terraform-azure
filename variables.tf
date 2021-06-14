@@ -129,3 +129,9 @@ variable "use_separate_storage_rg" {
   type        = bool
   description = "If true, use a separate resource group for storage needs. The resource group must be created via the separate module beforehand."
 }
+
+variable "email" {
+  default = ""
+  type = string
+  description = "Email address for obtaining TLS certificates via cert-manager"
+}

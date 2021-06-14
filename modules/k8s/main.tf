@@ -102,8 +102,13 @@ resource "azurerm_public_ip" "ambassador-ingress" {
   ## https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip#sku
   sku                 = "Standard"
   allocation_method   = "Static" 
-  domain_name_label   = var.k8s_dns_prefix ##PREFIX WITH TF WORKSPACE NAME
+  domain_name_label   = var.k8s_dns_prefix 
   depends_on          = [azurerm_role_assignment.publicip]
+}
+
+data "azurerm_public_ip" "ambassador-ingress" {
+  name = azurerm_public_ip.ambassador-ingress.name
+  resource_group_name = azurerm_resource_group.k8s_rg.name
 }
 
 resource "azurerm_role_assignment" "publicip" {

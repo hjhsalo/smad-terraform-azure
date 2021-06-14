@@ -60,5 +60,5 @@ output "kubelet_object_id" {
 }
 
 output "ambassador_public_ip" {
-  value = azurerm_public_ip.ambassador-ingress.ip_address
+  value = data.azurerm_public_ip.ambassador-ingress.ip_address
 }

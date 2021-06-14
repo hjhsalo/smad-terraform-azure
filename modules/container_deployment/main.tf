@@ -5,7 +5,7 @@
 
 locals {
   domain_name = format("%s.westeurope.cloudapp.azure.com", var.k8s_dns_prefix)
-  email = "mikael.saarinen@oulu.fi"
+  email = var.email
 }
 
 terraform {
@@ -15,6 +15,12 @@ terraform {
       version = "~> 1.11.1"
     }
   }
+}
+
+provider "kubectl" {
+  host                   = var.host
+  cluster_ca_certificate = var.cluster_ca_certificate
+  load_config_file       = false
 }
 
 # https://github.com/bitnami/azure-marketplace-charts/tree/a2342181bacffa6d27d265db187dcc938af1c3f0/bitnami/mongodb
@@ -103,13 +109,42 @@ resource "helm_release" "ambassador" {
   } */
 
 }
+
+###########################################
+### CRDs for Ambassador and cert-manager ##
+###########################################
+##Hardcoded manifest count value because of https://github.com/gavinbunney/terraform-provider-kubectl/issues/58
+## And the -temp resource doesn't work inside modules https://github.com/gavinbunney/terraform-provider-kubectl/issues/61
+data "kubectl_path_documents" "ambassador_manifests" {
+  pattern = "${path.module}/ambassador_mappings.yaml"
+  vars = {
+    domain = local.domain_name
+  }
+}
+
 resource "kubectl_manifest" "ambassador_mappings" {
-  yaml_body = templatefile("${path.module}/ambassador_mappings.yaml", { domain = local.domain_name})
+  wait = true
+  count = 7
+  yaml_body = element(data.kubectl_path_documents.ambassador_manifests.documents, count.index)
+}
+
+data "kubectl_path_documents" "tls_manifests" {
+  pattern = "${path.module}/tls_mappings.yaml"
+  vars = {
+    email = local.email
+    domain = local.domain_name
+  }
 }
 
 resource "kubectl_manifest" "tls_mappings" {
-  yaml_body = templatefile("${path.module}/tls_mappings.yaml", { domain = local.domain_name, email = local.email})
+  wait = true
+  count = 3
+  yaml_body = element(data.kubectl_path_documents.tls_manifests.documents, count.index)
 }
+
+/* resource "kubectl_manifest" "tls_mappings" {
+  yaml_body = templatefile("${path.module}/tls_mappings.yaml", { domain = local.domain_name, email = local.email})
+} */
 resource "kubernetes_service" "acme_challenge" {
   metadata {
     name = "acme-challenge-service"
